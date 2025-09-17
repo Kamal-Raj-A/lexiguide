@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Legal Doc AI Summarizer</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      scroll-behavior: smooth;
+      font-family: 'Segoe UI', sans-serif;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    .float-shape {
+      position: absolute;
+      border-radius: 50%;
+      opacity: 0.2;
+      animation: float 10s infinite alternate;
+    }
+    @keyframes float {
+      0% { transform: translateY(0) translateX(0) rotate(0deg);}
+      50% { transform: translateY(-50px) translateX(30px) rotate(45deg);}
+      100% { transform: translateY(0) translateX(0) rotate(0deg);}
+    }
+
+    .card, .section {
+      border-radius: 20px;
+      max-width: 750px;
+      width: 100%;
+      margin: 50px auto;
+      padding: 30px;
+      background: rgba(255,255,255,0.95);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      transform: translateY(50px);
+      opacity: 0;
+      transition: all 0.8s ease-out;
+    }
+    .card.visible, .section.visible {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .btn-custom {
+      background: linear-gradient(90deg, #4facfe, #00f2fe);
+      border: none;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-custom:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+      background: linear-gradient(90deg, #00c6ff, #4facfe);
+    }
+
+    .btn-success {
+      transition: all 0.3s ease;
+    }
+    .btn-success:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+    }
+
+    nav.navbar {
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+    }
+    nav.navbar a.nav-link {
+      position: relative;
+      transition: all 0.3s ease;
+    }
+    nav.navbar a.nav-link::after {
+      content: '';
+      display: block;
+      height: 2px;
+      width: 0;
+      background: #00c6ff;
+      transition: width 0.3s;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+    }
+    nav.navbar a.nav-link:hover::after {
+      width: 100%;
+    }
+
+    #summaryText {
+      font-size: 1.1rem;
+      line-height: 1.6;
+      padding-left: 20px;
+    }
+
+    h2 {
+      position: relative;
+    }
+    h2::after {
+      content: '';
+      display: block;
+      width: 60px;
+      height: 3px;
+      background: linear-gradient(90deg, #4facfe, #00f2fe);
+      margin: 10px auto 0;
+      border-radius: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Floating shapes -->
+  <div class="float-shape" style="width:100px;height:100px;background:#fff;top:50px;left:30px;"></div>
+  <div class="float-shape" style="width:150px;height:150px;background:#00f2fe;top:200px;right:50px;"></div>
+  <div class="float-shape" style="width:80px;height:80px;background:#4facfe;top:500px;left:100px;"></div>
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg sticky-top">
+    <div class="container">
+      <a class="navbar-brand fw-bold text-primary" href="#">📑 Legal Doc AI Summarizer</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link fw-bold" href="#summarizer">Summarizer</a></li>
+          <li class="nav-item"><a class="nav-link fw-bold" href="#about">About</a></li>
+          <li class="nav-item"><a class="nav-link fw-bold" href="#contact">Contact</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Summarizer Card -->
+  <div id="summarizer" class="card animate__animated">
+    <h1 class="text-center mb-4 text-primary animate__fadeInDown">📑 Legal Doc AI Summarizer</h1>
+    <p class="text-center text-muted mb-4 animate__fadeIn">Simplify complex legal documents into clear summaries.</p>
+
+    <form id="summaryForm">
+      <div class="mb-3">
+        <label for="documentText" class="form-label fw-bold">Paste your legal document</label>
+        <textarea id="documentText" class="form-control" rows="6" placeholder="Paste text here..."></textarea>
+      </div>
+      <div class="text-center">
+        <button type="submit" class="btn btn-custom text-white px-4 py-2">🔎 Summarize</button>
+      </div>
+    </form>
+
+    <hr class="my-4">
+
+    <h5 class="fw-bold text-center">Or Upload a File</h5>
+    <form id="uploadForm" enctype="multipart/form-data" class="mt-3">
+      <input type="file" name="file" id="fileInput" class="form-control mb-3" accept=".txt,.docx,.pdf" required>
+      <div class="text-center">
+        <button type="submit" class="btn btn-success px-4 py-2">📂 Upload & Summarize</button>
+      </div>
+    </form>
+
+<!-- Place this spinner above the resultCard -->
+<div class="text-center mt-3 d-none" id="spinner">
+  <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+  <p class="text-muted mt-2">Generating summary...</p>
+</div>
+
+
+    <div class="mt-4 d-none" id="resultCard">
+      <h4 class="fw-bold text-success">Summary</h4>
+      <ul id="summaryText" class="mt-3 border rounded p-3 bg-light"></ul>
+    </div>
+  </div>
+
+<!-- Q&A Section -->
+<div class="mt-5 d-none" id="qaSection">
+  <h4 class="fw-bold text-primary text-center">💬 Ask Questions About This Document</h4>
+
+  <form id="qaForm" class="mt-3 d-flex flex-column align-items-center">
+    <div class="mb-3 w-100" style="max-width:600px;">
+      <input type="text" id="qaInput" class="form-control" placeholder="E.g., Who pays for repairs?" required>
+    </div>
+    <div class="text-center">
+      <button type="submit" class="btn btn-custom text-white px-4 py-2">❓ Ask AI</button>
+    </div>
+  </form>
+
+  <div class="mt-3 p-3 border rounded bg-light d-none" id="qaAnswerBox" style="max-width:600px; margin:auto;">
+    <h6 class="fw-bold">Answer:</h6>
+    <p id="qaAnswer" class="mb-0 text-center"></p>
+  </div>
+</div>
+
+
+
+  <!-- About Section -->
+  <div id="about" class="section animate__animated">
+    <h2 class="text-center text-primary animate__fadeInUp">About Legal Doc AI Summarizer</h2>
+    <p>
+      Legal Doc AI Summarizer is an intelligent legal document summarizer designed to help lawyers,
+      paralegals, and legal enthusiasts quickly understand complex documents.
+      Using advanced natural language processing, it extracts key points and presents
+      them in a clear, concise summary.
+    </p>
+  </div>
+
+  <!-- Contact Section -->
+  <div id="contact" class="section mb-5 animate__animated">
+    <h2 class="text-center text-primary animate__fadeInUp">Contact Us</h2>
+    <p class="text-center mb-4">
+      Have questions or feedback? Reach out to us via email or social media.
+    </p>
+    <form id="contactForm">
+      <div class="mb-3">
+        <input type="text" class="form-control" id="name" placeholder="Your Name" required>
+      </div>
+      <div class="mb-3">
+        <input type="email" class="form-control" id="email" placeholder="Your Email" required>
+      </div>
+      <div class="mb-3">
+        <textarea class="form-control" id="message" rows="4" placeholder="Your Message" required></textarea>
+      </div>
+      <div class="text-center">
+        <button type="submit" class="btn btn-primary px-4 py-2">Send Message</button>
+      </div>
+    </form>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+  // Reveal on scroll
+  function revealOnScroll() {
+    const elements = document.querySelectorAll('.card, .section');
+    const windowBottom = window.innerHeight + window.scrollY;
+    elements.forEach(el => {
+      if (windowBottom > el.offsetTop + 100) {
+        el.classList.add('visible', 'animate__fadeInUp');
+      }
+    });
+  }
+  window.addEventListener('scroll', revealOnScroll);
+  window.addEventListener('load', revealOnScroll);
+
+  // Convert Gemini summary text into bullet points with highlights
+  function renderBulletPoints(summary) {
+    const ul = document.getElementById("summaryText");
+    ul.innerHTML = "";
+    summary.split("\n").forEach(line => {
+      if(line.trim() !== ""){
+        const li = document.createElement("li");
+        let text = line.trim();
+
+        // Highlight important legal consequences
+        const keywords = ["must", "shall", "responsibility", "liable", "consequence", "obligation"];
+        keywords.forEach(word => {
+          const regex = new RegExp("\\b" + word + "\\b", "gi");
+          text = text.replace(regex, `<span style="background-color: yellow; font-weight:bold;">${word}</span>`);
+        });
+
+        li.innerHTML = text;
+        ul.appendChild(li);
+      }
+    });
+  }
+
+  // Show spinner while waiting for response
+  async function fetchSummaryWithSpinner(endpoint, body) {
+    const spinner = document.getElementById("spinner");
+    const resultCard = document.getElementById("resultCard");
+
+    spinner.classList.remove("d-none");    // Show spinner
+    resultCard.classList.add("d-none");    // Hide previous result
+
+    try {
+      const response = await fetch(endpoint, body);
+      const data = await response.json();
+      spinner.classList.add("d-none");     // Hide spinner
+      resultCard.classList.remove("d-none"); // Show result
+
+     if(data.summary){
+      renderBulletPoints(data.summary);
+      // ✅ Show Q&A after file summary too
+      document.getElementById("qaSection").classList.remove("d-none");
+      } else {
+      document.getElementById("summaryText").textContent = data.error;
+      }
+
+
+
+    } catch (err) {
+      spinner.classList.add("d-none");
+      resultCard.classList.remove("d-none");
+      document.getElementById("summaryText").textContent = "Error connecting to server.";
+      console.error(err);
+    }
+  }
+
+  // Text summarizer
+  document.getElementById("summaryForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const text = document.getElementById("documentText").value;
+    if (!text.trim()) return alert("Please paste some text first!");
+
+    fetchSummaryWithSpinner("/summarize", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ text })
+    });
+  });
+
+  // File upload summarizer (with spinner)
+document.getElementById("uploadForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const fileInput = document.getElementById("fileInput");
+  if (fileInput.files.length === 0) { 
+    alert("Please select a file first!"); 
+    return; 
+  }
+
+  const spinner = document.getElementById("spinner");
+  const resultCard = document.getElementById("resultCard");
+
+  spinner.classList.remove("d-none");   // Show spinner
+  resultCard.classList.add("d-none");   // Hide old result
+
+  try {
+    const formData = new FormData();
+    formData.append("file", fileInput.files[0]);
+    const response = await fetch("/upload", { method: "POST", body: formData });
+    const data = await response.json();
+
+    spinner.classList.add("d-none");    // Hide spinner
+    resultCard.classList.remove("d-none"); // Show result
+
+    if(data.summary){
+      renderBulletPoints(data.summary);
+
+      // ✅ Show Q&A section after file upload
+      const qaSection = document.getElementById("qaSection");
+      qaSection.classList.remove("d-none");
+
+      // ✅ Store raw summary text (without HTML) for Q&A use
+      qaSection.dataset.rawText = data.raw_text || data.summary; 
+      // Make sure your backend /upload returns 'raw_text' (plain text) too
+    } else {
+      document.getElementById("summaryText").textContent = data.error;
+    }
+  } catch (err) {
+    spinner.classList.add("d-none");
+    resultCard.classList.remove("d-none");
+    document.getElementById("summaryText").textContent = "Error connecting to server.";
+    console.error(err);
+  }
+});
+
+  // Contact form
+  document.getElementById("contactForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = document.getElementById("name").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const message = document.getElementById("message").value.trim();
+    if (!name || !email || !message) {
+      alert("Please fill out all fields!");
+      return;
+    }
+    try {
+      const response = await fetch("/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, message })
+      });
+      const data = await response.json();
+      if (data.success) {
+        alert("Thank you! Your message has been saved.");
+        e.target.reset();
+      } else {
+        alert(data.error || "Something went wrong. Please try again.");
+      }
+    } catch (err) {
+      alert("Error connecting to server. Please try again later.");
+      console.error(err);
+    }
+  });
+
+// Q&A with document
+document.getElementById("qaForm")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const question = document.getElementById("qaInput").value.trim();
+  let text = document.getElementById("documentText").value.trim();
+
+  // Use raw text from uploaded file if document textarea is empty
+  if(!text){
+    const qaSection = document.getElementById("qaSection");
+    text = qaSection.dataset.rawText || "";
+  }
+
+  if (!question || !text) {
+    alert("Please summarize or upload a document first!");
+    return;
+  }
+
+  try {
+    const response = await fetch("/qa", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, question })
+    });
+    const data = await response.json();
+
+    document.getElementById("qaSection").classList.remove("d-none");
+    document.getElementById("qaAnswerBox").classList.remove("d-none");
+    document.getElementById("qaAnswer").textContent =
+      data.answer || data.error || "No answer found.";
+  } catch (err) {
+    document.getElementById("qaAnswer").textContent =
+      "Error connecting to AI server.";
+    console.error(err);
+  }
+});
+
+</script>
+</body>
+</html>
