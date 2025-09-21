@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y \
     pkg-config \
     libcairo2-dev \
     libffi-dev \
-    libgdk-pixbuf2.0-dev \
+    libgdk-pixbuf-xlib-2.0-dev \
     libpango1.0-dev \
     libjpeg-dev \
     zlib1g-dev \
